@@ -1,11 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
+
 
 # Region and IAM credentials
 provider "aws" {
@@ -16,7 +9,7 @@ provider "aws" {
 
 #ECR Repo creation
 resource "aws_ecr_repository" "app_ecr_repo" {
-  name = "my-ngnix-repo"
+  name = "ngnix-assessment-repo"
 }
 
 #ECS Cluster creation
@@ -46,8 +39,8 @@ resource "aws_ecs_task_definition" "app_task" {
   DEFINITION
   requires_compatibilities = ["FARGATE"] # use Fargate as the launch type
   network_mode             = "awsvpc"    # add the AWS VPN network mode as this is required for Fargate
-  memory                   = 512         # Specify the memory the container requires
-  cpu                      = 256         # Specify the CPU the container requires
+  memory                   = 256         # Specify the memory the container requires
+  cpu                      = 128         # Specify the CPU the container requires
   execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
 }
 
@@ -86,7 +79,7 @@ resource "aws_default_subnet" "default_subnet_b" {
   availability_zone = "us-west-2b"
 }
 
-# LB creation
+# Load Balancer creation
 resource "aws_alb" "application_load_balancer" {
   name               = "ngnix-app-lb" #load balancer name
   load_balancer_type = "application"
@@ -115,7 +108,7 @@ resource "aws_security_group" "load_balancer_security_group" {
   }
 }
 
-# Assigning TG
+# Assigning Target Group
 resource "aws_lb_target_group" "target_group" {
   name        = "target-group"
   port        = 80
@@ -124,7 +117,7 @@ resource "aws_lb_target_group" "target_group" {
   vpc_id      = "${aws_default_vpc.default_vpc.id}"
 }
 
-# Assiging Listeners for the LB
+# Assiging Listeners for the Load Balancer
 resource "aws_lb_listener" "listener" {
   load_balancer_arn = "${aws_alb.application_load_balancer.arn}"
   port              = "80"
@@ -158,8 +151,8 @@ resource "aws_ecs_service" "app_service" {
 
 resource "aws_security_group" "service_security_group" {
   ingress {
-    from_port = 0
-    to_port   = 0
+    from_port = 22
+    to_port   = 22
     protocol  = "-1"
     # Only allowing traffic in from the load balancer security group
     security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
