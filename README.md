@@ -1,7 +1,7 @@
 # AssessmentRepo
 
 
-# Terraform deployment to host a stateless application in AWS
+# Terraform deployment - host a stateless application in AWS
 
 
 Steps to be performed are as follows:
